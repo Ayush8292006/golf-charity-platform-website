@@ -1,26 +1,258 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+  body {
+    @apply bg-[#0A0F1E] text-gray-100 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  ::-webkit-scrollbar-track {
+    @apply bg-white/5 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-teal-500/50 rounded-full hover:bg-teal-500 transition-colors;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Glass Card Effect */
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl transition-all duration-300;
+  }
+  
+  .glass-card:hover {
+    @apply bg-white/10 border-white/20 shadow-2xl shadow-teal-500/10;
+  }
+  
+  /* Gradient Button */
+  .btn-gradient {
+    @apply bg-gradient-to-r from-teal-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/25 hover:scale-[1.02] active:scale-[0.98];
+  }
+  
+  /* Input Field */
+  .input-field {
+    @apply w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300;
+  }
+  
+  /* Stat Card */
+  .stat-card {
+    @apply bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 hover:border-teal-500/50 transition-all duration-300 hover:scale-105;
+  }
+  
+  /* Animated Gradient Border */
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(135deg, #0A0F1E, #0A0F1E);
+    border-radius: 1rem;
+  }
+  
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(135deg, #14b8a6, #3b82f6);
+    border-radius: 1rem;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .gradient-border:hover::before {
+    opacity: 1;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(5px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation Classes */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-fadeInDown {
+  animation: fadeInDown 0.5s ease-out forwards;
+}
+
+.animate-fadeInLeft {
+  animation: fadeInLeft 0.5s ease-out forwards;
+}
+
+.animate-fadeInRight {
+  animation: fadeInRight 0.5s ease-out forwards;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 3s linear infinite;
+}
+
+/* Loading Spinner */
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(20, 184, 166, 0.2);
+  border-top-color: #14b8a6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Typography */
+.gradient-text {
+  background: linear-gradient(135deg, #14b8a6, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Utility Classes */
+.backdrop-blur-custom {
+  backdrop-filter: blur(12px);
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.2);
+}
+
+.shadow-glow-hover:hover {
+  box-shadow: 0 0 30px rgba(20, 184, 166, 0.4);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .glass-card {
+    backdrop-filter: blur(8px);
+  }
+  
+  .btn-gradient {
+    padding: 0.75rem 1.5rem;
+  }
 }
