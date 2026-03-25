@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Save, DollarSign, Heart, Trophy, Settings as SettingsIcon } from 'lucide-react'
+import { ArrowLeft, Save, DollarSign, Heart, Trophy, Settings as SettingsIcon, RefreshCw } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
@@ -23,7 +23,7 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     checkAdmin()
-    setLoading(false)
+    loadSettings()
   }, [])
 
   async function checkAdmin() {
@@ -33,15 +33,66 @@ export default function AdminSettingsPage() {
     }
   }
 
+  async function loadSettings() {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .single()
+      
+      if (error) {
+        console.error('Error loading settings:', error)
+      } else if (data) {
+        setSettings({
+          platformName: data.platform_name || 'Golf4Good',
+          monthlyPrice: data.monthly_price || 10,
+          yearlyPrice: data.yearly_price || 100,
+          charityMinPercentage: data.charity_min_percentage || 10,
+          emailNotifications: data.email_notifications !== false,
+          autoDrawEnabled: data.auto_draw_enabled !== false
+        })
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function saveSettings() {
     setSaving(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    toast.success('Settings saved!')
-    setSaving(false)
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          id: '00000000-0000-0000-0000-000000000001',
+          platform_name: settings.platformName,
+          monthly_price: settings.monthlyPrice,
+          yearly_price: settings.yearlyPrice,
+          charity_min_percentage: settings.charityMinPercentage,
+          email_notifications: settings.emailNotifications,
+          auto_draw_enabled: settings.autoDrawEnabled,
+          updated_at: new Date().toISOString()
+        })
+      
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('Settings saved!')
+      }
+    } catch (err) {
+      toast.error('Failed to save settings')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div></div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
   }
 
   return (
@@ -54,14 +105,23 @@ export default function AdminSettingsPage() {
             </Link>
             <h1 className="text-3xl font-bold text-white">System Settings</h1>
           </div>
-          <button
-            onClick={saveSettings}
-            disabled={saving}
-            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 px-4 py-2 rounded-lg transition"
-          >
-            <Save className="w-4 h-4" />
-            <span>{saving ? 'Saving...' : 'Save Settings'}</span>
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={loadSettings}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Refresh</span>
+            </button>
+            <button
+              onClick={saveSettings}
+              disabled={saving}
+              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 px-4 py-2 rounded-lg transition disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              <span>{saving ? 'Saving...' : 'Save Settings'}</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -77,7 +137,7 @@ export default function AdminSettingsPage() {
                   type="text"
                   value={settings.platformName}
                   onChange={(e) => setSettings({ ...settings, platformName: e.target.value })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-teal-500"
                 />
               </div>
               <div>
@@ -86,7 +146,7 @@ export default function AdminSettingsPage() {
                     type="checkbox"
                     checked={settings.emailNotifications}
                     onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                    className="w-4 h-4"
+                    className="w-4 h-4 rounded border-white/20"
                   />
                   Enable Email Notifications
                 </label>
@@ -97,7 +157,7 @@ export default function AdminSettingsPage() {
                     type="checkbox"
                     checked={settings.autoDrawEnabled}
                     onChange={(e) => setSettings({ ...settings, autoDrawEnabled: e.target.checked })}
-                    className="w-4 h-4"
+                    className="w-4 h-4 rounded border-white/20"
                   />
                   Auto-run Monthly Draws
                 </label>
@@ -117,7 +177,7 @@ export default function AdminSettingsPage() {
                   type="number"
                   value={settings.monthlyPrice}
                   onChange={(e) => setSettings({ ...settings, monthlyPrice: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-teal-500"
                 />
               </div>
               <div>
@@ -126,7 +186,7 @@ export default function AdminSettingsPage() {
                   type="number"
                   value={settings.yearlyPrice}
                   onChange={(e) => setSettings({ ...settings, yearlyPrice: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-teal-500"
                 />
               </div>
               <div>
@@ -135,7 +195,7 @@ export default function AdminSettingsPage() {
                   type="number"
                   value={settings.charityMinPercentage}
                   onChange={(e) => setSettings({ ...settings, charityMinPercentage: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-teal-500"
                 />
               </div>
             </div>
