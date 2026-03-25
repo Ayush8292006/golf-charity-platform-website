@@ -52,96 +52,105 @@ export default function AdminPage() {
     }
   }
 
-  async function loadAllData() {
-    try {
-      // Get users count
-      const { count: usersCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-      
-      // Get subscriptions count and revenue
-      const { data: subscriptions, count: subsCount } = await supabase
-        .from('subscriptions')
-        .select('*', { count: 'exact' })
-      
-      // Calculate total revenue
-      let revenue = 0
-      subscriptions?.forEach(sub => {
-        if (sub.status === 'active') {
-          if (sub.plan_type === 'monthly') {
-            revenue += 10
-          } else if (sub.plan_type === 'yearly') {
-            revenue += 100
-          }
-        }
-      })
-      
-      // Get draws count
-      const { count: drawsCount } = await supabase
-        .from('draws')
-        .select('*', { count: 'exact', head: true })
-      
-      // Get charities count
-      const { count: charitiesCount } = await supabase
-        .from('charities')
-        .select('*', { count: 'exact', head: true })
-      
-      // Get winners count
-      const { count: winnersCount } = await supabase
-        .from('winners')
-        .select('*', { count: 'exact', head: true })
-      
-      // Get recent users
-      const { data: recentUsersData } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5)
-      
-      // Get recent winners
-      const { data: recentWinnersData } = await supabase
-        .from('winners')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5)
-      
-      // Get profiles for winners
-      let winnersWithProfiles = []
-      if (recentWinnersData && recentWinnersData.length > 0) {
-        const userIds = recentWinnersData.map(w => w.user_id).filter(Boolean)
-        if (userIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, full_name, email')
-            .in('id', userIds)
-          
-          const profileMap = new Map()
-          profiles?.forEach(p => profileMap.set(p.id, p))
-          
-          winnersWithProfiles = recentWinnersData.map(winner => ({
-            ...winner,
-            profiles: profileMap.get(winner.user_id) || { full_name: 'User', email: 'No email' }
-          }))
-        } else {
-          winnersWithProfiles = recentWinnersData
+async function loadAllData() {
+  try {
+    // Get settings (prices)
+    const { data: settings } = await supabase
+      .from('settings')
+      .select('monthly_price, yearly_price')
+      .single()
+    
+    const monthlyPrice = settings?.monthly_price || 10
+    const yearlyPrice = settings?.yearly_price || 100
+    
+    // Get users count
+    const { count: usersCount } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+    
+    // Get subscriptions
+    const { data: subscriptions, count: subsCount } = await supabase
+      .from('subscriptions')
+      .select('*', { count: 'exact' })
+    
+    // Calculate revenue using settings prices
+    let revenue = 0
+    subscriptions?.forEach(sub => {
+      if (sub.status === 'active') {
+        if (sub.plan_type === 'monthly') {
+          revenue += monthlyPrice
+        } else if (sub.plan_type === 'yearly') {
+          revenue += yearlyPrice
         }
       }
-
-      setStats({
-        users: usersCount || 0,
-        subscriptions: subsCount || 0,
-        draws: drawsCount || 0,
-        charities: charitiesCount || 0,
-        winners: winnersCount || 0,
-        totalRevenue: revenue
-      })
-      setRecentUsers(recentUsersData || [])
-      setRecentWinners(winnersWithProfiles)
-      
-    } catch (error) {
-      console.error('Error loading data:', error)
+    })
+    
+    // Get draws count
+    const { count: drawsCount } = await supabase
+      .from('draws')
+      .select('*', { count: 'exact', head: true })
+    
+    // Get charities count
+    const { count: charitiesCount } = await supabase
+      .from('charities')
+      .select('*', { count: 'exact', head: true })
+    
+    // Get winners count
+    const { count: winnersCount } = await supabase
+      .from('winners')
+      .select('*', { count: 'exact', head: true })
+    
+    // Get recent users
+    const { data: recentUsersData } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5)
+    
+    // Get recent winners
+    const { data: recentWinnersData } = await supabase
+      .from('winners')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5)
+    
+    // Get profiles for winners
+    let winnersWithProfiles = []
+    if (recentWinnersData && recentWinnersData.length > 0) {
+      const userIds = recentWinnersData.map(w => w.user_id).filter(Boolean)
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds)
+        
+        const profileMap = new Map()
+        profiles?.forEach(p => profileMap.set(p.id, p))
+        
+        winnersWithProfiles = recentWinnersData.map(winner => ({
+          ...winner,
+          profiles: profileMap.get(winner.user_id) || { full_name: 'User', email: 'No email' }
+        }))
+      } else {
+        winnersWithProfiles = recentWinnersData
+      }
     }
+
+    setStats({
+      users: usersCount || 0,
+      subscriptions: subsCount || 0,
+      draws: drawsCount || 0,
+      charities: charitiesCount || 0,
+      winners: winnersCount || 0,
+      totalRevenue: revenue
+    })
+    setRecentUsers(recentUsersData || [])
+    setRecentWinners(winnersWithProfiles)
+    
+  } catch (error) {
+    console.error('Error loading data:', error)
   }
+}
 
   async function refreshStats() {
     setRefreshing(true)

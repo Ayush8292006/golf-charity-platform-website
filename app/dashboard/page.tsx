@@ -322,23 +322,14 @@ export default function DashboardPage() {
           <p className="text-gray-400 mt-1">Track your scores and improve your game</p>
         </div>
 
-        {/* Settings Info Banner */}
-        {settings && (
-          <div className="bg-white/5 rounded-xl border border-white/10 p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <Gift className="w-5 h-5 text-teal-400" />
-              <div>
-                <p className="text-sm text-gray-400">Platform Info</p>
-                <p className="text-white text-sm">
-                  Monthly: ${settings.monthly_price} | Yearly: ${settings.yearly_price}
-                </p>
-                <p className="text-gray-500 text-xs">
-                  Min Charity: {settings.charity_min_percentage}% of subscription
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+       // In dashboard, prices are already from settings
+{settings && (
+  <div className="bg-white/5 rounded-xl p-4 mb-6">
+    <p className="text-white text-sm">
+      Monthly: ${settings.monthly_price} | Yearly: ${settings.yearly_price}
+    </p>
+  </div>
+)}
 
         {/* Subscription Status Card */}
         <div className="bg-white/5 rounded-xl border border-white/10 p-5 mb-8">
